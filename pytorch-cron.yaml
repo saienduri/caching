@@ -1,0 +1,37 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pytorch-git-cache-refresh
+  namespace: arc-pytorch
+spec:
+  # Run every 20 minutes
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          securityContext:
+            fsGroup: 1001
+          containers:
+            - name: git-cache-setup
+              image: ghcr.io/nod-ai/ossci-gitops/ghascale-rocm-dev:main
+              imagePullPolicy: Always
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  set -euo pipefail
+                  cd /home/runner/pytorch-data/git-cache
+                  ./setup_git_cache_recurse.sh
+              resources:
+                requests:
+                  cpu: "20"
+              volumeMounts:
+                - name: pytorch-ci-data
+                  mountPath: /home/runner/pytorch-data
+                  readOnly: false
+          volumes:
+            - name: pytorch-ci-data
+              persistentVolumeClaim:
+                claimName: pytorch-ci-data
