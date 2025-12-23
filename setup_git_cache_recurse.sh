@@ -9,7 +9,7 @@ SUBMODULES_DIR="${CACHE_ROOT}/submodules"
 
 mkdir -p "${CACHE_ROOT}" "${SUBMODULES_DIR}"
 
-echo "=== [1/6] Cloning or updating PyTorch mirror ==="
+echo "=== [1/4] Cloning or updating PyTorch mirror ==="
 if [ ! -d "${CACHE_ROOT}/${MAIN_REPO_NAME}" ]; then
   git clone --mirror "${MAIN_REPO_URL}" "${CACHE_ROOT}/${MAIN_REPO_NAME}"
 else
@@ -52,7 +52,7 @@ mirror_repo() {
 }
 # --------------------------------------------------------------------
 
-echo "=== [2/6] Extracting PyTorch submodules ==="
+echo "=== [2/4] Extracting PyTorch submodules ==="
 TMP_DIR=$(mktemp -d)
 if git --git-dir="${CACHE_ROOT}/${MAIN_REPO_NAME}" show HEAD:.gitmodules > "${TMP_DIR}/.gitmodules" 2>/dev/null; then
   echo "Extracted .gitmodules from mirror"
@@ -62,15 +62,14 @@ else
 fi
 
 # --------------------------------------------------------------------
-echo "=== [3/6] Mirroring PyTorch submodules recursively ==="
+echo "=== [3/4] Mirroring PyTorch submodules recursively ==="
 SUBMODULE_URLS=$(git config --file "${TMP_DIR}/.gitmodules" --get-regexp '^submodule\..*\.url' | awk '{print $2}' | sort -u)
 for url in ${SUBMODULE_URLS}; do
   mirror_repo "${url}"
 done
 # --------------------------------------------------------------------
 
-echo "=== [6/6] Cleanup ==="
+echo "=== [4/4] Cleanup ==="
 rm -rf "${TMP_DIR}"
 
 echo "✅ Recursive git cache ready at ${CACHE_ROOT}"
-```
